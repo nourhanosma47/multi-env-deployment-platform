@@ -1,0 +1,187 @@
+stages:
+  - test
+  - build
+  - security
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend-api"
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend-app"
+
+# Global before script
+before_script:
+  - echo "Starting CI/CD Pipeline for $CI_COMMIT_REF_NAME"
+
+# ==================== TEST STAGE ====================
+
+test:backend:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - cd backend
+    - pip install -r requirements.txt
+  script:
+    - echo "Running backend tests..."
+    - python -m py_compile app.py
+    - echo "✓ Backend syntax check passed"
+    - |
+      if [ -f test_app.py ]; then
+        pip install pytest pytest-cov
+        python -m pytest test_app.py -v
+      fi
+  only:
+    - main
+    - dev
+    - merge_requests
+
+test:frontend:
+  stage: test
+  image: nginx:alpine
+  script:
+    - echo "Checking frontend files..."
+    - test -f frontend/index.html || exit 1
+    - test -f frontend/nginx.conf || exit 1
+    - test -f frontend/Dockerfile || exit 1
+    - echo "✓ Frontend files validated"
+  only:
+    - main
+    - dev
+    - merge_requests
+
+# ==================== BUILD STAGE ====================
+
+build:backend:
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Building backend image..."
+    - cd backend
+    - docker build -t $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker tag $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA $BACKEND_IMAGE:latest
+    - docker push $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $BACKEND_IMAGE:latest
+    - echo "✓ Backend image built and pushed"
+  only:
+    - main
+  tags:
+    - docker
+
+build:frontend:
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Building frontend image..."
+    - cd frontend
+    - docker build -t $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker tag $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA $FRONTEND_IMAGE:latest
+    - docker push $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $FRONTEND_IMAGE:latest
+    - echo "✓ Frontend image built and pushed"
+  only:
+    - main
+  tags:
+    - docker
+
+# ==================== SECURITY STAGE ====================
+
+security:scan-backend:
+  stage: security
+  image: aquasec/trivy:latest
+  script:
+    - echo "Scanning backend image for vulnerabilities..."
+    - trivy image --severity HIGH,CRITICAL $BACKEND_IMAGE:latest || true
+    - echo "✓ Security scan completed"
+  only:
+    - main
+  allow_failure: true
+
+security:scan-frontend:
+  stage: security
+  image: aquasec/trivy:latest
+  script:
+    - echo "Scanning frontend image for vulnerabilities..."
+    - trivy image --severity HIGH,CRITICAL $FRONTEND_IMAGE:latest || true
+    - echo "✓ Security scan completed"
+  only:
+    - main
+  allow_failure: true
+
+# ==================== DEPLOY STAGE ====================
+
+deploy:staging:
+  stage: deploy
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  script:
+    - echo "Deploying to staging environment..."
+    - echo "Images ready for deployment:"
+    - echo "  - Backend: $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - echo "  - Frontend: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - echo "✓ Staging deployment info generated"
+  only:
+    - main
+  environment:
+    name: staging
+    url: http://staging.example.com
+  when: manual
+
+deploy:production:
+  stage: deploy
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  script:
+    - echo "Deploying to production environment..."
+    - echo "Images ready for deployment:"
+    - echo "  - Backend: $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - echo "  - Frontend: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - echo "✓ Production deployment info generated"
+  only:
+    - main
+  environment:
+    name: production
+    url: http://production.example.com
+  when: manual
+
+# ==================== NOTIFICATION ====================
+
+notify:success:
+  stage: .post
+  image: alpine:latest
+  script:
+    - echo "======================================"
+    - echo "✓ CI/CD Pipeline completed successfully!"
+    - echo "======================================"
+    - echo "Commit: $CI_COMMIT_SHORT_SHA"
+    - echo "Branch: $CI_COMMIT_REF_NAME"
+    - echo "Author: $CI_COMMIT_AUTHOR"
+    - echo "======================================"
+  only:
+    - main
+  when: on_success
+
+notify:failure:
+  stage: .post
+  image: alpine:latest
+  script:
+    - echo "======================================"
+    - echo "✗ CI/CD Pipeline failed!"
+    - echo "======================================"
+    - echo "Commit: $CI_COMMIT_SHORT_SHA"
+    - echo "Branch: $CI_COMMIT_REF_NAME"
+    - echo "Check the logs above for details"
+    - echo "======================================"
+  only:
+    - main
+  when: on_failure

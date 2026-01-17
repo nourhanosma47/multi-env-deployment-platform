@@ -1,0 +1,119 @@
+---
+- name: Setup Server for DevOps Platform
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Update and upgrade system packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 3600
+      tags: system
+
+    - name: Install essential packages
+      apt:
+        name:
+          - vim
+          - htop
+          - curl
+          - wget
+          - git
+          - unzip
+          - build-essential
+          - python3-pip
+        state: present
+      tags: system
+
+    - name: Set timezone
+      timezone:
+        name: UTC
+      tags: system
+
+    - name: Configure firewall (UFW)
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '22'    # SSH
+        - '80'    # HTTP
+        - '443'   # HTTPS
+        - '5005'  # Backend API
+        - '8080'  # Frontend
+      tags: firewall
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: deny
+      tags: firewall
+
+    - name: Create swap file (if not exists)
+      command: |
+        fallocate -l 2G /swapfile
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+      args:
+        creates: /swapfile
+      tags: system
+
+    - name: Add swap to fstab
+      lineinfile:
+        path: /etc/fstab
+        line: '/swapfile none swap sw 0 0'
+        create: yes
+      tags: system
+
+    - name: Configure system limits
+      pam_limits:
+        domain: '*'
+        limit_type: '-'
+        limit_item: nofile
+        value: '65536'
+      tags: system
+
+    - name: Install monitoring tools
+      apt:
+        name:
+          - netdata
+        state: present
+      tags: monitoring
+      ignore_errors: yes
+
+    - name: Create application user
+      user:
+        name: appuser
+        shell: /bin/bash
+        groups: docker
+        append: yes
+      tags: users
+
+    - name: Setup log rotation for Docker
+      copy:
+        content: |
+          /var/lib/docker/containers/*/*.log {
+            rotate 7
+            daily
+            compress
+            delaycompress
+            missingok
+            notifempty
+            copytruncate
+          }
+        dest: /etc/logrotate.d/docker
+        mode: '0644'
+      tags: logging
+
+    - name: Display setup completion message
+      debug:
+        msg: |
+          ✓ Server setup completed!
+          Hostname: {{ inventory_hostname }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Kernel: {{ ansible_kernel }}
+          Memory: {{ ansible_memtotal_mb }}MB
+          CPUs: {{ ansible_processor_vcpus }}
+      tags: verify

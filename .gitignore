@@ -1,0 +1,55 @@
+cd ~/multi-env-deployment-platform
+
+# Initialize git (if not done)
+git init
+
+# Create .gitignore
+nano .gitignore
+```
+
+**أضيفي في `.gitignore`:**
+```
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.Python
+env/
+venv/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
+# Ansible
+*.retry
+.vault_pass
+.ansible_facts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# SSH Keys
+*.pem
+*.key
+
+# Environment
+.env
+.env.local
+
+# Docker
+.dockerignore
