@@ -2,7 +2,7 @@
 
 A complete DevOps project demonstrating containerization, CI/CD, and infrastructure automation using modern DevOps practices.
 
-## 🚀 Project Overview
+##  Project Overview
 
 This project showcases a full-stack application with automated deployment pipeline, featuring:
 - Microservices architecture
@@ -11,7 +11,7 @@ This project showcases a full-stack application with automated deployment pipeli
 - Infrastructure as Code (IaC)
 - Multi-environment configuration
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
@@ -26,7 +26,7 @@ This project showcases a full-stack application with automated deployment pipeli
                      └─────────────┘
 ```
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - HTML5, CSS (Tailwind CSS)
@@ -49,14 +49,14 @@ This project showcases a full-stack application with automated deployment pipeli
 - Terraform (IaC)
 - Ansible (Configuration Management)
 
-## 📋 Prerequisites
+##  Prerequisites
 
 - Docker Engine 20.10+
 - Docker Compose V2
 - Git
 - Ubuntu 20.04+ or similar Linux distribution
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Clone the repository
 ```bash
@@ -92,7 +92,7 @@ docker compose ps
 - **API Health**: http://localhost:5005/health
 - **API Status**: http://localhost:5005/api/status
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 multi-env-deployment-platform/
@@ -109,7 +109,7 @@ multi-env-deployment-platform/
 └── README.md              # Project documentation
 ```
 
-## 🔌 API Endpoints
+##  API Endpoints
 
 ### Health & Status
 - `GET /health` - Health check endpoint
@@ -128,7 +128,7 @@ multi-env-deployment-platform/
 ### Cache
 - `GET /api/cache/test` - Test Redis cache connection
 
-## 🧪 Testing
+##  Testing
 
 ### Test Backend API
 ```bash
@@ -149,7 +149,7 @@ curl -X POST http://localhost:5005/api/items \
 curl http://localhost:5005/api/cache/test
 ```
 
-## 🔧 Development
+##  Development
 
 ### View logs
 ```bash
@@ -180,7 +180,7 @@ docker compose down
 docker compose down -v
 ```
 
-## 🌍 Environment Variables
+##  Environment Variables
 
 Backend environment variables (configured in docker-compose.yml):
 - `DB_HOST` - PostgreSQL host
@@ -190,7 +190,7 @@ Backend environment variables (configured in docker-compose.yml):
 - `REDIS_HOST` - Redis host
 - `REDIS_PORT` - Redis port
 
-## 📊 Monitoring & Health Checks
+##  Monitoring & Health Checks
 
 All services include health checks:
 - **Backend**: HTTP health endpoint
@@ -198,7 +198,7 @@ All services include health checks:
 - **Redis**: PING command
 - **Frontend**: Nginx health endpoint
 
-## 🔐 Security Features
+##  Security Features
 
 - Environment variable configuration
 - CORS configuration
@@ -206,7 +206,7 @@ All services include health checks:
 - Health check endpoints
 - Container isolation
 
-## 🚦 Next Steps
+##  Next Steps
 
 - [ ] Add CI/CD pipeline with GitHub Actions
 - [ ] Implement Infrastructure as Code with Terraform
@@ -215,16 +215,9 @@ All services include health checks:
 - [ ] Implement automated testing
 - [ ] Add Kubernetes deployment manifests
 
-## 📝 Notes
+##  Notes
 
 - Default ports can be changed in `docker-compose.yml`
 - Database data persists in Docker volume `postgres_data`
 - Frontend uses Tailwind CSS from CDN
 
-## 👤 Author
-
-Nour - DevOps Engineer
-
-## 📄 License
-
-This project is open source and available for educational purposes.
