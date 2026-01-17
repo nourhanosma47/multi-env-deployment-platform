@@ -60,7 +60,7 @@ This project showcases a full-stack application with automated deployment pipeli
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/nourhanosma47/multi-env-deployment-platform
 cd multi-env-deployment-platform
 ```
 
